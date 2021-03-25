@@ -20,10 +20,8 @@
 
 4. The command strace will display the system calls that a process makes as it runs. Using the man command, determine what option for strace will show a summary, with a count, of the number of times a process called each system call. Using that option, what system call is called the most by the command date? 
 
-**Ans.**
-
 	 ```
-		strace -c date
+	 strace -c date
 	 ```	
 
 5. Can you determine, using strace, what system call is used to change the directory?  
