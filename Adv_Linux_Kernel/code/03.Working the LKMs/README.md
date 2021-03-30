@@ -10,7 +10,7 @@ lsmod
 
 ### Module Info
 ```
-modinfo
+modinfo <module>
 ```
 
 ### Add Modules
