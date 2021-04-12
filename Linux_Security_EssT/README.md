@@ -106,9 +106,9 @@
 * Encrypt a File or Folder
 	* For example Make folder `/data`
 
-	```
-	sudo mkdir /data
-	```
+		```
+		sudo mkdir /data
+		```
 
 	* Locate 100mb to a file `opt` in `/data`
 		
