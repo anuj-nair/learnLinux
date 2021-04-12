@@ -54,7 +54,9 @@
 * Then `update-grub`
 
 ### Disk Encryption
+
 * Install `cryptsetup`
+
 * Encrypt New Device/Disk
 
 	**Encrypting Disk Will Remove All Data**
@@ -104,6 +106,7 @@
 		```
 
 * Encrypt a File or Folder
+
 	* For example Make folder `/data`
 
 		```
@@ -163,10 +166,12 @@
 
 * `Control` + `Alt` + `Delete` in systemd, rebooting your system.
 * To disable this
+
 	```
 	systemctl mask ctrl-alt-del.target
 	systemctl daemon-reload
 	```
+
 ### Summary
 * Physical security threats.
 * Physical security guidelines.
@@ -176,6 +181,72 @@
 * Disabling reboots from `Ctrl+Alt+Del`
 
 ## Account Security
+
+### PAM (Pluggable Authentication Modules)
+
+* Location:
+	```
+	/etc/pam.d
+	/etc/pam.d/login
+	/etc/pam.d/sshd
+	```
+		
+* Format:
+	
+	```
+	module_interface
+	control_flag
+	module_name
+	module_args
+	```
+
+* PAM Modules Interfaces
+	* `auth` - Authenticates users.
+	* `account` - Verifies if access is permitted.
+	* `password` - Changes user's password.
+	* `session` - Manages user's sessions.
+
+* PAM Control Flags
+	* `required` - Module result must be successful to continue.
+	* `requisite` - Like required, but no other modules are invoked.
+	* `sufficient` - Authenticates user if no required modules have failed, otherwise iggnored.
+	* `optional` - Only used when no other modules reference the interface.
+	* `include` - Includes configuration from another file.
+	* complext control flags - `attribute=value` for more info `man pam.d`
+
+* PAM configuration
+	
+	* Configuration:
+		
+		```
+		account required pam_nologin.so
+		session required pam_unix.so
+		```
+
+	* Getting Help:
+		
+		```
+		man pam_nologin
+		man pam_unix
+		```
+### Linux Account Types
+* `root`, the superuser
+	* Root can do anything.
+	* Always has the UID of 0.
+* System Accounts
+	* UIDs of System Accounts are  &lt; 1000 
+	* Configured in `/etc/login.defs`
+	
+	* `useradd` with `-r` flag specifies to have UID of System Account Range
+	
+		```
+		useradd -r system_account_name
+		```
+* Normal User Accounts
+	* UIDs of Normal User Accounts are &ge; 1000
+	* Intended for human (interactive) use
+	
+
 
 ## Network Security 
 
