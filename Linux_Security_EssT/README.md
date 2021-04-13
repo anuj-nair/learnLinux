@@ -767,6 +767,9 @@
 		| -d Destination IP</br> -d 10.11.12.13</br> -d 10.11.12.0/24|Destination IP, Network, or Name|
 		| -p Protocol</br> -p tcp</br> -p udp</br> -p icmp|Protocol|
 		| -m Module module_options|Enable extended packet matching module.</br>(man iptables-extensions)|
+		| -p Protocol -m Protocol --sport Port</br> -p tcp -m tcp --sport 8080</br> -p tcp --sport 8080|Source Port|
+		| -p Protocol -m Protocol --dport Port</br> -p tcp -m tcp --dport 80</br> -p tcp --dport 80</br> -p udp --dport 53|Destination Port|
+		| -p icmp -m icmp --icmp-type Type</br> -p icmp -m icmp --icmp-type echo-reply</br> -p icmp --icmp-type echo-reply </br> -p icmp --icmp-type echo-request |ICMP packet type</br>(iptables -p icmp -h)|
 		| -m limit --limit rate [/second/minute/hour/day]</br>-m limit --limit-burst<br> -m limit --limit 5/m --limit-burst 10<br>-m limit ! --limit 5/s|Match until a limit is reached.<br>--limit default is 3/hours<br>--limit-burst default is 5<br>/s = second</br>/m = minute</br>/h = hour</br>/d = day</br>! invert the match |
 	
 	* Target/Jump
@@ -775,7 +778,7 @@
 		```
 		-j <target/chain>
 		-j ACCEPT   #Built-in target
-		-j DROP 	#Built-in target
+		-j DROP     #Built-in target
 		-j LOGNDROP #Custom chain
 		``` 
 ## File System Security 
