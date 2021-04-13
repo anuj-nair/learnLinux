@@ -684,6 +684,7 @@
 			* REJECT
 			* LOG
 			* RETURN
+
 ### Command-Line interface
 
 * Command `iptables`/`ip6tables`
@@ -719,6 +720,21 @@
 		```
 		iptables --line-numbers -L
 		```
+
+	* Creating and Deleting a Chain
+		
+		* Create Chain
+
+			```
+			iptables -t <table> -N <chain>
+			```
+	
+		* Delete Chain
+
+			```
+			iptables -t <table> -X <chain>
+			```
+			
 	* Appending, Inserting, and Deleting Rules
 		* Appending Rule
 			* For appending a rule in the end of chain.
@@ -741,6 +757,7 @@
 			```	
 			
 			* After specifing the chain add a rule number to specify where the rule need to be inserted, if not it will default at 0<sup>th</sup> position
+
 			```
 			iptables -I <chain> <rule-number> <rule-specification>
 			```
@@ -753,12 +770,14 @@
 			iptables -D <chain> <rule-specification>	
 			iptables -D <chain> <rule-number>	
 			```
+
 		* Flushing Rules
 			* To delete all rules for a chain
 			
 			```
 			iptables -t <table> -F <chain>
 			```
+
 	* Rule Specification Options
 	
 		|**Option**|**Description**|
@@ -781,4 +800,130 @@
 		-j DROP     #Built-in target
 		-j LOGNDROP #Custom chain
 		``` 
+
+* To Save the Rules
+	* In Debian and Ubuntu install `iptables-persistent`
+
+		```
+		apt install iptables-persistent
+		```
+
+	* To save the rules
+
+		```
+		netfilter-persistent save
+		```
+
+	* Rules and Configuration will be saved in `/etc/iptables`
+
+
+* `iptables` Examples
+
+	* Drop all connection from source IP of 10.0.0.124
+		
+		```
+		iptables -A INPUT -s 10.0.0.124 -j DROP
+		```
+
+	* `-A INPUT` means the rule is being added to the INPUT chain
+
+	* Accepts all TCP connection from source IP of 10.0.0.0/24 and destination port 22
+
+		```
+		iptables -A INPUT -s 10.0.0.0/24 -p tcp -dport 22 -j ACCEPT
+		```
+
+	* Drops all TCP connection for destination port 22
+		
+		```
+		iptables -A INPUT -p tcp --dport 22 -j DROP
+		```
+
+	* To Protect against DOS attacks
+
+		```
+		iptables -I INPUT -p tcp --dport 80 \
+		-m limit --limit 50/min --limit-burst 200 \
+		-j REJECT
+
+		iptables -I INPUT -p tcp --dport 80 \
+		-m limit --limit 50/min --limit-burst 200 \
+		-m state --state NEW -j REJECT
+		```
+### TCP Wrappers
+* Host-based network ACL system.
+* Controls access to "wrapped" services.
+* A wrapped service is compiled with libwrap support.
+* To Print required shared libraries run
+	```
+	ldd <path to the binary of the file>
+	```
+* Can control access by IP address/Networks.
+* Can control access by hostname.
+* Transparent to the client and service.
+* Used with xinetd.
+* Centralized management for multiple network services.
+* Runtime configuration.
+* TCP Wrapper Configuration
+	* Configuration files to TCP Wrappers are `/etc/hosts.allow` and `/etc/hosts.deny`
+	* When TCP connection request received first `/etc/hosts.allow` is checked.
+	* If match is found, access is granted.
+	* If not then next `/etc/hosts,deny` is checked.
+	* If match is found access is denied and log message will be written.
+	* If there are no matches, access is granted.
+* TCP Wrappers Examples	
+	* The format given below is valid for both `/etc/hosts.allow` and `/etc/hosts.deny`
+
+	```
+	# SERVICE(S) : CLIENT(S) [ : ACTION(S) ]
+	sshd : 10.11.12.13
+	imapd : www.example.com
+	sshd, imapd : 10.12.11.13
+	ALL : 10.9.8.12, .example.com, .admin.example.com 
+	sshd : jumbox*.example.com, jumbox0?.example.com # Regex Matching
+	sshd : 10.11.12.
+	sshd : 10.
+	sshd : 10.11.0.0/255.255.0.0
+	sshd : /etc/hosts.sshd # Path to a file with list of host
+	imapd : ALL
+	```
+
+	* In `/etc/hosts.allow`
+
+		```
+		# SERVICE(S) : CLIENT(S) [ : ACTION(S) ]
+		sshd : ALL EXPECT .hacker.net  	
+		```
+	
+* TCP Wrappers Logging
+		
+	```
+	# SERVICE(S) : CLIENT(S) [ : ACTION(S) ]
+	sshd : 10.11.12.13 : severity emerg
+	sshd : 10.11.12.13 : severity local0.alert
+	```
+		
+	* In `/etc/hosts.deny`
+		
+		```		
+		# SERVICE(S) : CLIENT(S) [ : ACTION(S) ]
+		sshd : .hacker.net : spawn /usr/bin/wall "Attack in progress."
+		sshd : .hacker.net : spawn /usr/bin/wall "Attack from %a."
+		```
+* Expansions	
+	
+	|**Format Specifiers**|**Description**|
+	|---|---|
+	|%a (%A)|The client (server) host address|
+	|%c|Client information.|
+	|%d|The daemon process name.|
+	|%h (%H)|The client (server) host name or address.|
+	|%n (%N)|The client (server) host name.|
+	|%p|The daemon process id.|
+	|%s|Server information.|
+	|%u|The client user name (or "unknown").|
+	|%%|Expands to single `%` charater.|
+
+
+
 ## File System Security 
