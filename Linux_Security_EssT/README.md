@@ -223,6 +223,7 @@
 		session required pam_unix.so
 		```
 
+
 	* Getting Help:
 		
 		```
@@ -927,3 +928,586 @@
 
 
 ## File System Security 
+
+### File and Directory Permissions
+
+```
+ls -l 	
+-rwxrw-r-- user:group bytes data time filename
+```
+
+* Permission - Files vs Directories
+	
+	|Symbol|Permission|File|Directory|
+	|:---:|---|---|---|
+	|r|Read|Allows a file to be read.|Allows file names in the directory to be read.|
+	|w|Write|Allows a file to be modified.|Allows entries to be modified within the directory.|
+	|x|Execute|Allows the execution of a file.|Allows access to contents and metadata for entries.|
+
+* Permission Categories
+
+	|Symbol|Categories|
+	|:---:|---|
+	|u|User|
+	|g|Group|
+	|o|Other|
+	|a|All|
+
+* Groups
+	* Every user is at one group.
+	* Users can belong to  many groups.
+	* Groups are used to organize users.
+	* The `group` command displays a user's groups.
+	* You can also use `id -Gn`
+
+
+* Secret Decoder Ring
+  
+	|Type|User|Group|Other|
+  |:---:|:---:|:---:|:---:|
+	|1|3|3|3|
+	|d\-|rwx|rwx|rwx|
+	
+	* In Type 
+		* Directory is denoted by `d`.
+		* File is denoted by `-` or `.`
+
+	* In Users, Groups, and Others the order of permission is (Read , Write m Execute) rwx
+
+	* If any permission is not granted to a file or folder the charater of the permission gets replaced with `-` 
+	
+* Changing Permission
+
+	|Item|Meaning|
+	|---|---|
+	|chmod|Change mode command|
+	|ugoa|User category</br>user ,group, other, all|
+	|+-=| Add, subtract, or set permissions|
+	|rwx| Read, Write, Execute|
+
+	```
+	chmod u+w filename # User is granted with Write permission
+	chmod u-rw filname # User is denied of Read and Write permission
+	chmod u+rwx,g-x,o-rwx filname # User is granter with rwx, Groups are denied of x, and Others are denied of rwx
+	chmod a=r filname # All (User, Groups, and Others) are Granted with only r permission
+	chmod u=rwx,g=rx,o= filename # User has rwx, Groups have rx and Others has None
+	```
+
+* Numeric Based Permissions
+
+	||r|w|x|
+	|---|:---:|:---:|:---:|
+	|**Value for off**|0|0|0|
+	|**Binary value for on**|1|1|1|
+	|**Base 10 value for on**|4|2|1|
+
+	* Possible Numeric Permissions
+		
+		|Octal|Binary|String|Description|
+		|:---:|:---:|:---:|:---|
+		|0|000|\-\-\-|No permissions|
+		|1|001|\-\-x|Execute only|
+		|2|010|\-w\-|Write only|
+		|3|011|\-wx|Write and Execute (2+1)|
+		|4|100|r\-\-|Read only|
+		|5|101|r\-x|Read and Execute (4+1)|
+		|6|110|rw\-|Read and Write (4+2)|
+		|7|111|rwx|Read, Write, and Execute (4+2+1)|
+
+* Working with Group
+	* New files belong to your primary group.
+	* The `chgrp` command changes the group.
+	
+	```
+	chgrp group filename/directoryname
+	```
+* Directory Permissions Revisited
+	* Permissions on a directory can affect the files in the directory.
+	* If the file permissions look correct, start checking directory permissions.
+	* Work your way up to the root
+
+* File Creation Mask
+	* File creation mask determines default permissions.
+	* If no mask were used permissions would be:
+		* 777 for directory
+		* 666 for files
+
+* The `umask` Command
+	
+	```
+	umask [-S] <mode>
+	``` 
+
+	*  Sets the file creation mask to mode, if given.
+	*  Use -S t symbolic notation.
+	
+			|	|Directory|File|
+			|---|:---:|:---:|
+			|Base Permission|777|666|
+			|Subtract Umask|\-022|\-022|
+			|Creations Permission|755|644|
+
+* Special Modes
+	* umask 0022 is the same as umask 022
+	* chmod 0644 is the same as chmod 644
+	* The special modes are:
+		* setuid
+		* setgid
+		* sticky
+
+* Summary
+	* Symbolic permissions.
+	* Numeric/octal permissions.
+	* File vs Directory permissions
+	* Changing permissions.
+	* Working with groups.
+	* File creation mask.
+
+### Special Modes
+
+
+* Octal Permissions
+	
+	||setuid|setgid|sticky|
+	|---|:---:|:---:|:---:|
+	|Value for of|0|0|0|
+	|Binary value for on|1|1|1|
+	|Base 10 value for on|4|2|1|
+
+* Setuid
+	* When a process is started, it runs using the starting user's UID and GID.
+	* setuid = Set User ID upon execution.
+	* `-rwsr-xr-x 1 root root /usr/bin/passwd`
+	* `ping`
+	* `chsh`
+	* setuid files are a attack surface.
+	* Not honored on shell script
+	* Adding the Setuid Attribute
+
+		```
+		chmod u+s <filename>
+		chmod 4755 <filename>
+		``` 
+
+	* Removing the Setuid Attribute
+		
+		```
+		chmod u-s <filename>
+		chmod 0755 <filename>
+		```
+
+	* Finding Setuid Files
+
+		```
+		find / -perm /4000
+
+		# Older style
+		find / -perm +4000
+		```
+
+	* Only the Owner Should Edit Setuid Files
+
+		||Symbolic|Octal|
+		|---|:---:|:---:|
+		|**Good**|\-rwsr-xr-x|4755|
+		|**Bad**|\-rwsrwxr-x|4775|
+		|**Really bad**|\-rwsrwxrwx|4777|
+
+* Setgid
+	* setgid = Set Group ID upon execution.
+	* `-rwxr-sr-x 1 root tty /usr/bin/wall`
+	* `crw--w---- 1 bob  tty /dev/pts/0`
+	* Finding Setgid Files
+
+			```
+			find / -perm /2000 -ls
+			# Older style
+			find / -perm +2000 -ls
+			``` 
+	
+	* Adding the Setguid Attribute
+
+		```
+		chmod g+s <filename>
+		chmod 2755 <filename>
+		```
+	
+	* Adding the Seduid and Setgid Attributes
+
+		```
+		chmod ug+s <filename>
+		chmod 6755 <filename>
+		```
+	
+	* Removing the Setguid Attribute
+	
+		```
+		chmod g-s <filename>
+		chmod 0755 <filename>
+		```
+	
+	* Setgid on Directories
+		* setgid on directory causes new files to inherit the group of the directory.
+		* setguid causes directories to inherit the setguid bit.
+		* Is not retroactive.
+		* Great for work with groups.
+	
+	* Use an Integrity Checker
+		* Other to `find`
+		* Tripwire
+		* AIDE (Advanced Intrusion Detection Environment)
+		* OSSEC
+		* Samhain
+		* Package managers
+	
+* The Sticky Bit
+	* Use on a directory to only allow the owner of the file/directory to delete it.
+	* Used on /tmp
+	* `drwxrwxrwxt 10 root root 4096 Feb 1 09:47 /tmp`
+	* Adding the Sticky Bit
+	
+		```
+		chmod o+t <filename>
+		chmod 1777 <filename>
+		```
+
+	* Removing the Sticky bit
+	
+		```
+		chmod o-t <filename>
+		chmod 0777 <filename>
+		``` 
+	
+	* Reading `ls` Output
+		* A capitalized special permission means the underlying normal permission is not set.
+		* A lowercase special permission means the underlying normal permission set.
+		
+		```
+		touch file
+		chmod 644 file
+		ls -l file
+		chmod u+s file
+		ls -l file
+		chmod u+x file
+		ls -l file
+		```
+
+
+### File Attributes (xattr)
+
+* Supported by many file systems.
+	* `ext2`, `ext3`, `ext4`
+	* `XFS`
+	* `Btrfs`, `ReiserFS`, `JFS`
+	* `OCFS2`, `OrangeFS`, `Lustre`
+	* `SquashFS`, `F2FS`
+
+* Attribute: `i` immutable
+	* The file cannot be:
+		* modified 
+		* deleted
+		* renamed
+		* hard linked to
+	* Unset the attribute in order to delete it.
+
+* Attribute: `a` append
+	* Append only.
+	* Existing contents cannot be modified.
+	* Cannot be deleted while attribute is set.
+	* Use this attribute on log files.
+	* Safeguard the audit trail.
+* Other Attributes
+	* Not every attribute is supported.
+	* `man ext4`,`man xfs`, `man brtfs`, etc.
+	* Example: `s` secure deletion
+
+* Viewing Attributes 
+	* Use the `lsattr` command.
+	
+	```
+	# lsattr /etc/motd
+	--------------- /etc/motd
+	# lsattr /var/log/messages.log
+	-----a--------- /var/log/messages.log
+	```
+
+* Modifying Attributes
+	* Use the `chattr` command.
+	* `+` adds attributes.
+	* `-` removes attributes.
+	* `=` sets the exact attributes.
+
+	```
+	# lsattr /var/log/messages.log
+	--------------- /var/log/messages.log
+	# chattr +a /var/log/messages.log
+	# lsattr /var/log/messages.log
+	-----a--------- /var/log/messages.log
+	# chattr -a /var/log/messages.log
+	# lsattr /var/log/messages.log
+	--------------- /var/log/messages.log
+	# chattr =is /var/log/messages.log
+	# lsattr /var/log/messages.log
+	s---i---------- /var/log/messages.log
+	# chattr = /var/log/messages.log
+	# lsattr /var/log/messages.log
+	--------------- /var/log/messages.log
+	```
+
+### ACLs
+
+* ACL = Access Control List
+* Provides additional control
+* Example: Give one user access to a file.
+* Traditional solution is to create another group.
+	* Increases management overhead of groups.
+	
+	```
+	groupa: tom, jane
+	groupb: tom, jane, bob
+	```
+* Ensure file system mounted with ACL support
+
+	```
+	mount -o acl /path/to/dev /path/to/mount
+	tune2fs -o acl /path/to/dev
+	```
+
+* Check:
+
+	```
+	tune2fs -l /path/to/dev | grep options
+	```
+
+* Types of ACLs
+	* Access
+		* Control access to specific file or directory.
+	* Default
+		* Used on directories only.
+		* Files without access rules use the default ACL rules.
+		* Not retroactive.
+		* Optional.
+
+* ACLs Can Be Configured:
+	* Per user
+	* Per group
+	* For users not in file's group
+	* Via the effective rights mask
+
+* Create ACLs
+	* Use the `setfacl` command.
+	* May need to install the ACL tools.
+	* Modify or add ACLs:
+
+	```
+	setfacl -m ACL <filename>
+	```
+
+* User ACLs/Rules
+	* `u:uid:perms` Set the access ACL for a user.
+	
+	```
+	setfacl -m u:jason:rwx start.sh
+	setfacl -m u:sam:xr start.sh
+	```
+
+* Group ACLs/Rules
+	* `g:uid:perms` Set the access ACL for a group.
+	
+	```
+	setfacl -m g:audio:rwx start.sh
+	setfacl -m g:potato:xr start.sh
+	```
+
+* Mask ACLs/Rules
+
+	* `m:perms` Set the effective rights mask.
+	
+	```
+	setfacl -m m:rwx start.sh
+	setfacl -m m:xr start.sh
+	```
+* Other ACLs/Rules
+	* `o:perms` Sets the access ACL for others.
+	
+	```
+	setfacl -m o:r start.sh
+	```
+
+* Create Multiple ACLs at Once
+	
+	```
+	setfacl -m u:bob:r,g:potato:rw start.sh
+	```
+* Default ACLs
+	* `d:[ugo]:perms` Sets the default ACL.
+
+	```
+	setfacl -m d:g:potato:rw start.sh
+	```
+
+* Setting ACLs Recursively (`-R`)
+
+	```
+	setfacl -R -m g:potato:rw start.sh	
+	```
+
+* Removing ACLs
+	* removing Specific ACL permissions
+
+		* Format
+
+			```
+			setfacl -x ACL <filename>	
+			```
+
+		* Example
+		
+			```
+			setfacl -x u:jason start.sh
+			setfacl -x g:potato start.sh
+			```
+
+	* removing ALL ACL permissions
+
+		* Format
+
+			```
+			setfacl -b ACL <filename>	
+			```
+
+		* Example
+		
+			```
+			setfacl -b start.sh
+			```
+
+* Viewing ACLs
+	* Format
+
+		```
+		getfacl <filename>
+		```
+	
+	* Example
+		
+		```
+		getfacl start.sh
+		```
+
+### Rootkit Hunter
+
+* Rootkits
+	* Software used to gain root access and remain undetected.
+	* They attempt to hide from system administrators and antivirus software.
+	* User space rootkits replace common commands such as `ls`, `ps`, `find`, `netstat`, etc.
+	* Kernal space rootkits add or replace parts of the core operating systems.
+		* Loadable Kernal Modules (LKMs)
+		* /dev/kmem
+		* /dev/mem
+
+* Rootkit Detection
+	* Use a file intergrity checker for user space rootkits. (`AIDE`,`tripwire`,`OSSEC`,etc.)
+	* Identify inconsistent behavior of a system.
+		* High CPU utilization without corresponding processes.
+		* High network load or unusual connections.
+	* Kernal mode Rootkits have to be running in order to hide themselves.
+	* Halt the system and examine the storage.
+		* Use a known good operating system to do the investigation.
+		* Use bootable media, for example.
+
+	* `chkrootkit`
+		* Shell script that searches for rootkits.
+			* Detects modification of system binaries.
+			* Checks for promiscuous mode.
+			* Checks for missing lastlog and utmp entries.
+			* Looks for LKM trojans.
+		* Run interactively or schedule execution.
+		* [www.chkrootkit.org](http://www.chkrootkit.org)
+
+	* Rootkit Hunter/RKHunter
+		* Shell script that searches for rootkits.
+		* [rkhunter.sourceforge.net](http://rkhunter.sourceforge.net)
+
+		```
+		rkhunter --update
+		rkhunter --propupd
+		rkhunter -c
+		cat /var/log/rkhunter.log
+		rkhunter -c -rwo # Warning only
+		rkhunter --cronjob
+		```
+
+		* Rootkit Hunter Configuration
+			* Config File `/etc/rkhunter.conf`
+			* For reporting warnings in mail update config file
+
+				```
+				MAIL-ON-WARNING=username@domain.com
+				```
+
+			* For allowing warning in a hidden files or directories
+
+				``` 
+				ALLOWHIDDENDIR="/dev/.udev"
+				ALLOWHIDDENFILE="/dev/.blkid.tab"
+				ALLOWHIDDENFILE="/dev/.blkid.tab.old"
+				```
+
+	* OSSEC 
+		* Host Intrusion Detection System (HIDS)
+		* More than just Rootkit detection: log analysis, file intergrity checking, alerting.
+		* Syscheck module - user mode rootkit detection. (through hash checking of binary files)
+		* Rootcheck Module - both user mode and kernel mode rootkit detection.
+		* Searches for file names known to be associated with user mode rootkits.
+		* Signature based rootkit detection.
+		* Queries the OS for information and looks for inconsistent results.
+			* Compares netstat with bind() results.
+			* Many other checks.
+		* [ossec.github.io](http://ossec.github.io/)
+
+* Rootkit Removal
+	* Keep a copy of the data if possible.
+	* Learn how to keep it from happening again.
+	* Reinstall core OS components and start investigating.
+		* Not recommended. Easy to make mistake.
+	* Safest is to reinstall the OS from a trusted media.
+	
+* Rootkit Prevention
+	* Use good security practices
+		* Physical
+		* Account
+		* Network
+	* Use file integrity monitoring
+		* AIDE
+		* Tripwire
+		* OSSEC
+	* Keep your systems patched.
+
+## Additional Resources
+
+### Linux Hardening Guides
+
+* [LinuxTrainingAcademy.com/hardening](http://LinuxTrainingAcademy.com/hardening)
+* [benchmarks.cisecurity.org](http://benchmarks.cisecurity.org)
+* [docs.fedoraproject.org](http://docs.fedoraproject.org)
+* [sans.org](http://sans.org)
+* [access.redhat.com](http://access.redhat.com)
+* [iase.disa.mil/stigs](http://iase.disa.mil/stigs)
+* [nsa.gov](http://nsa.gov)
+* [giac.org](http://giac.org)
+* [suse.com](http://suse.com)
+* [help.ubuntu.com](http://help.ubuntu.com)
+
+### Linux Security Email Lists
+
+* [LinuxTrainingAcademy.com/security-lists](http://LinuxTrainingAcademy.com/security-lists)
+
+### Security Meetups
+
+* [LinuxTrainingAcademy.com/citysec](http://LinuxTrainingAcademy.com/citysec)
+* [meetup.com](http://meetup.com)
+
+### Security Conference Videos
+
+* [LinuxTrainingAcademy.com/security-videos](http://LinuxTrainingAcademy.com/security-videos)
