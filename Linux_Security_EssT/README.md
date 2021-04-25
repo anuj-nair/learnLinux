@@ -302,9 +302,9 @@
 	
 	* User account expire info
 			
-			```
-			chage -l <account>
-			```
+		```
+		chage -l <account>
+		```
 
 ### Controlling Account Access
 
@@ -875,6 +875,7 @@
 * TCP Wrappers Examples	
 	* The format given below is valid for both `/etc/hosts.allow` and `/etc/hosts.deny`
 
+
 	```
 	# SERVICE(S) : CLIENT(S) [ : ACTION(S) ]
 	sshd : 10.11.12.13
@@ -933,8 +934,8 @@
 
 ```
 ls -l 	
--rwxrw-r-- user:group bytes data time filename
 ```
+>-rwxrw-r-- user:group bytes data time filename
 
 * Permission - Files vs Directories
 	
@@ -966,7 +967,7 @@ ls -l
 	|Type|User|Group|Other|
   |:---:|:---:|:---:|:---:|
 	|1|3|3|3|
-	|d\-|rwx|rwx|rwx|
+	|d\\-|rwx|rwx|rwx|
 	
 	* In Type 
 		* Directory is denoted by `d`.
@@ -1018,9 +1019,11 @@ ls -l
 	* New files belong to your primary group.
 	* The `chgrp` command changes the group.
 	
+
 	```
 	chgrp group filename/directoryname
 	```
+
 * Directory Permissions Revisited
 	* Permissions on a directory can affect the files in the directory.
 	* If the file permissions look correct, start checking directory permissions.
@@ -1041,11 +1044,11 @@ ls -l
 	*  Sets the file creation mask to mode, if given.
 	*  Use -S t symbolic notation.
 	
-			|	|Directory|File|
-			|---|:---:|:---:|
-			|Base Permission|777|666|
-			|Subtract Umask|\-022|\-022|
-			|Creations Permission|755|644|
+		|	|Directory|File|
+		|---|:---:|:---:|
+		|Base Permission|777|666|
+		|Subtract Umask|\-022|\-022|
+		|Creations Permission|755|644|
 
 * Special Modes
 	* umask 0022 is the same as umask 022
@@ -1119,11 +1122,11 @@ ls -l
 	* `crw--w---- 1 bob  tty /dev/pts/0`
 	* Finding Setgid Files
 
-			```
-			find / -perm /2000 -ls
-			# Older style
-			find / -perm +2000 -ls
-			``` 
+		```
+		find / -perm /2000 -ls
+		# Older style
+		find / -perm +2000 -ls
+		``` 
 	
 	* Adding the Setguid Attribute
 
@@ -1224,6 +1227,7 @@ ls -l
 * Viewing Attributes 
 	* Use the `lsattr` command.
 	
+
 	```
 	# lsattr /etc/motd
 	--------------- /etc/motd
@@ -1266,6 +1270,7 @@ ls -l
 	groupa: tom, jane
 	groupb: tom, jane, bob
 	```
+
 * Ensure file system mounted with ACL support
 
 	```
@@ -1299,6 +1304,7 @@ ls -l
 	* May need to install the ACL tools.
 	* Modify or add ACLs:
 
+
 	```
 	setfacl -m ACL <filename>
 	```
@@ -1306,6 +1312,7 @@ ls -l
 * User ACLs/Rules
 	* `u:uid:perms` Set the access ACL for a user.
 	
+
 	```
 	setfacl -m u:jason:rwx start.sh
 	setfacl -m u:sam:xr start.sh
@@ -1314,6 +1321,7 @@ ls -l
 * Group ACLs/Rules
 	* `g:uid:perms` Set the access ACL for a group.
 	
+
 	```
 	setfacl -m g:audio:rwx start.sh
 	setfacl -m g:potato:xr start.sh
@@ -1323,24 +1331,30 @@ ls -l
 
 	* `m:perms` Set the effective rights mask.
 	
+
 	```
 	setfacl -m m:rwx start.sh
 	setfacl -m m:xr start.sh
 	```
+
 * Other ACLs/Rules
 	* `o:perms` Sets the access ACL for others.
 	
+
 	```
 	setfacl -m o:r start.sh
 	```
+
 
 * Create Multiple ACLs at Once
 	
 	```
 	setfacl -m u:bob:r,g:potato:rw start.sh
 	```
+
 * Default ACLs
 	* `d:[ugo]:perms` Sets the default ACL.
+
 
 	```
 	setfacl -m d:g:potato:rw start.sh
